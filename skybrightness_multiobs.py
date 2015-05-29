@@ -31,7 +31,9 @@ import ephem
 latitude = '-30:15:06.37'
 longitude = '-70:44:17.50'
 elevation = 2552.0
-passband = 'r'
+passband1 = 'u'
+passband2 = 'g'
+passband3 = 'r'
 ra_obs = 12.0 # Hours
 dec_obs = -60.0 # Degrees
 time_of_observation = "2015/05/01 0:00:00"
@@ -39,7 +41,10 @@ time_of_observation = "2015/05/01 0:00:00"
 deltats = np.arange(0,7*86400,60)
 
 tts = []
-total_mags = []
+total_mags_1 = []
+total_mags_2 = []
+total_mags_3 = []
+
 
 for deltat in deltats:
 
@@ -113,9 +118,13 @@ for deltat in deltats:
                  'y':[1.72,2.12,2.91,4.31]}
     
     # Determine moon data for this phase
-    moon_data_passband = moon_data[passband]
-    delta_mag = np.interp(moon.moon_phase,moon_phases,moon_data_passband)
-    
+    moon_data_passband1 = moon_data[passband1]
+    delta_mag_1 = np.interp(moon.moon_phase,moon_phases,moon_data_passband1)
+    moon_data_passband2 = moon_data[passband2]
+    delta_mag_2 = np.interp(moon.moon_phase,moon_phases,moon_data_passband2)
+    moon_data_passband3 = moon_data[passband3]
+    delta_mag_3 = np.interp(moon.moon_phase,moon_phases,moon_data_passband3)    
+
     # Fits to solar sky brightness (from Coughlin, Stubbs, and Claver Table 4) 
     sun_data = {'u':[88.5,-0.5,-0.5,0.4],
                 'g':[386.5,-2.2,-2.4,0.8],
@@ -126,39 +135,60 @@ for deltat in deltats:
                 'y':[92.0,-1.3,-0.2,0.9]}
     
     # Determine sun data for this phase
-    sun_data_passband = sun_data[passband]
+    sun_data_passband = sun_data[passband1]
     flux = sun_data_passband[0] + sun_data_passband[1]*angle +\
            sun_data_passband[2]*alt_target + sun_data_passband[3]*alt_moon
     flux = flux* (10**11)
     #flux_mag = -2.5 * np.log10(flux)
-    flux_mag = flux
+    flux_mag_1 = flux
+
+    sun_data_passband = sun_data[passband2]
+    flux = sun_data_passband[0] + sun_data_passband[1]*angle +\
+           sun_data_passband[2]*alt_target + sun_data_passband[3]*alt_moon
+    flux = flux* (10**11)
+    #flux_mag = -2.5 * np.log10(flux)
+    flux_mag_2 = flux
+
+    sun_data_passband = sun_data[passband3]
+    flux = sun_data_passband[0] + sun_data_passband[1]*angle +\
+           sun_data_passband[2]*alt_target + sun_data_passband[3]*alt_moon
+    flux = flux* (10**11)
+    #flux_mag = -2.5 * np.log10(flux)
+    flux_mag_3 = flux
 
     # Determine total magnitude contribution
-    total_mag = delta_mag + flux_mag
+    total_mag_1 = delta_mag_1 + flux_mag_1
    
-    print "Sun-> Moon conversion: %.5f"%delta_mag 
-    print "Sky brightness contribution: %.5f"%flux_mag
-    print "Total magnitude reduction: %.5f"%total_mag
+    print "Sun-> Moon conversion: %.5f"%delta_mag_1
+    print "Sky brightness contribution: %.5f"%flux_mag_1
+    print "Total magnitude reduction: %.5f"%total_mag_1
     
     print "" 
 
     if alt_moon < 0:
-        total_mag = 0
+        total_mag_1 = 0
+        total_mag_2 = 0
+        total_mag_3 = 0
     if alt_target < 0:
         continue
     if alt_sun > 0:
         continue
 
     tts.append(deltat)
-    total_mags.append(total_mag)
+    total_mags_1.append(flux_mag_1)
+    total_mags_2.append(flux_mag_2)
+    total_mags_3.append(flux_mag_3)
 
 tts = np.array(tts)
 
 plotName = "plots/delta_mag.png"
 plt.figure()
-plt.plot(tts/86400.0,total_mags,'k*')
+plt.plot(tts/86400.0,total_mags_1,'b*',label='u')
+plt.plot(tts/86400.0,total_mags_2,'g*',label='g')
+plt.plot(tts/86400.0,total_mags_3,'r*',label='r')
 plt.xlabel(r"%s + time [days]"%time_of_observation)
 #plt.ylabel(r"\Delta M")
 plt.ylabel(r"Flux")
+plt.legend()
 plt.savefig(plotName)
 plt.close()
