@@ -34,24 +34,32 @@ elevation = 2552.0
 passband = 'r'
 ra_obs = 12.0 # Hours
 dec_obs = -60.0 # Degrees
-time_of_observation = "2015/05/05 6:00:00"
+time_of_observation = "2015/05/01 0:00:00"
 
-deltats = np.arange(0,31*86400,180)
+deltats = np.arange(0,7*86400,60)
+
+tts = []
 total_mags = []
 
 for deltat in deltats:
 
-    # Where is the moon?
-    moon = ephem.Moon()
     utc_date = datetime.datetime.strptime(time_of_observation, "%Y/%m/%d %H:%M:%S")
     utc_date = utc_date + datetime.timedelta(seconds=deltat)
 
     print utc_date
 
+    # Where is the moon?
+    moon = ephem.Moon()
     moon.compute(utc_date)
     ra_moon = (24/(2*np.pi))*float(repr(moon.ra))
     dec_moon = (180/np.pi)*float(repr(moon.dec))
     
+    # Where is the sun?
+    sun = ephem.Sun()
+    sun.compute(utc_date)
+    #ra_sun = (24/(2*np.pi))*float(repr(sun.ra))
+    #dec_sun = (180/np.pi)*float(repr(sun.dec))
+
     # Coverting both target and moon ra and dec to radians
     ra1 = float(repr(moon.ra))
     ra2 = ra_obs * ((2*np.pi)/24)
@@ -87,6 +95,14 @@ for deltat in deltats:
     az_moon = float(repr(star.az)) * (360/(2*np.pi))
     print "Altitude / Azimuth of moon: %.5f / %.5f"%(alt_moon,az_moon)
     
+    # Determine altitude and azimuth of the sun
+    star._ra  = sun.ra
+    star._dec = sun.dec
+    star.compute(telescope)
+    alt_sun = float(repr(star.alt)) * (360/(2*np.pi))
+    az_sun = float(repr(star.az)) * (360/(2*np.pi))
+    print "Altitude / Azimuth of sun: %.5f / %.5f"%(alt_sun,az_sun)
+
     # Moon phase data (from Coughlin, Stubbs, and Claver Table 2) 
     moon_phases = [2,10,45,90]
     moon_data = {'u':[2.60,3.05,4.06,5.52],
@@ -114,23 +130,35 @@ for deltat in deltats:
     flux = sun_data_passband[0] + sun_data_passband[1]*angle +\
            sun_data_passband[2]*alt_target + sun_data_passband[3]*alt_moon
     flux = flux* (10**11)
-    flux_mag = -2.5 * np.log10(flux)
-    
+    #flux_mag = -2.5 * np.log10(flux)
+    flux_mag = flux
+
     # Determine total magnitude contribution
     total_mag = delta_mag + flux_mag
-    
+   
     print "Sun-> Moon conversion: %.5f"%delta_mag 
     print "Sky brightness contribution: %.5f"%flux_mag
     print "Total magnitude reduction: %.5f"%total_mag
     
     print "" 
 
+    if alt_moon < 0:
+        total_mag = 0
+    if alt_target < 0:
+        continue
+    if alt_sun > 0:
+        continue
+
+    tts.append(deltat)
     total_mags.append(total_mag)
+
+tts = np.array(tts)
 
 plotName = "plots/delta_mag.png"
 plt.figure()
-plt.plot(deltats/86400.0,total_mags,'k*')
+plt.plot(tts/86400.0,total_mags,'k*')
 plt.xlabel(r"%s + time [days]"%time_of_observation)
-plt.ylabel(r"\Delta M")
+#plt.ylabel(r"\Delta M")
+plt.ylabel(r"Flux")
 plt.savefig(plotName)
 plt.close()
