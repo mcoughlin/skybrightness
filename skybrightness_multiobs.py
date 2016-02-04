@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (C) Michael Coughlin and Christopher Stubbs(2015)
+# Copyright (C) Michael Coughlin and Christopher Stubbs (2015)
 #
 # skybrightness is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -36,7 +36,7 @@ passband2 = 'g'
 passband3 = 'r'
 ra_obs = 12.0 # Hours
 dec_obs = -60.0 # Degrees
-time_of_observation = "2015/05/01 0:00:00"
+time_of_observation = "2015/04/30 18:00:00"
 
 deltats = np.arange(0,7*86400,60)
 
@@ -183,12 +183,15 @@ tts = np.array(tts)
 
 plotName = "plots/delta_mag.png"
 plt.figure()
-plt.plot(tts/86400.0,total_mags_1,'b*',label='u')
-plt.plot(tts/86400.0,total_mags_2,'g*',label='g')
+plt.plot(tts/86400.0,total_mags_1,'bo',label='u')
+plt.plot(tts/86400.0,total_mags_2,'gx',label='g')
 plt.plot(tts/86400.0,total_mags_3,'r*',label='r')
 plt.xlabel(r"%s + time [days]"%time_of_observation)
 #plt.ylabel(r"\Delta M")
-plt.ylabel(r"Flux")
+plt.ylabel(r"Flux [photons/s]")
+plt.ylim([0,5e13])
 plt.legend()
+plt.savefig(plotName)
+plotName = "plots/delta_mag.eps"
 plt.savefig(plotName)
 plt.close()
