@@ -81,16 +81,17 @@ print "Altitude / Azimuth of moon: %.5f / %.5f"%(alt_moon,az_moon)
 
 # Moon phase data (from Coughlin, Stubbs, and Claver Table 2) 
 moon_phases = [2,10,45,90]
-moon_data = {'u':[2.60,3.05,4.06,5.52],
-             'g':[2.36,2.78,3.77,5.19],
-             'r':[2.10,2.50,3.45,4.84],
-             'i':[1.92,2.31,3.23,4.59],
-             'z':[2.17,2.57,3.53,4.92],
-             'y':[1.72,2.12,2.91,4.31]}
+moon_data = {'u':[2.7,3.1,4.2,5.7],
+             'g':[2.4,2.8,3.8,5.2],
+             'r':[2.1,2.5,3.4,4.9],
+             'i':[1.9,2.3,3.3,4.7],
+             'z':[1.9,2.2,3.2,4.6],
+             'y':[1.8,2.2,3.1,4.5]}
 
 # Determine moon data for this phase
 moon_data_passband = moon_data[passband]
 delta_mag = np.interp(moon.moon_phase,moon_phases,moon_data_passband)
+delta_mag_error = 0.1*delta_mag
 
 # Fits to solar sky brightness (from Coughlin, Stubbs, and Claver Table 4) 
 sun_data = {'u':[88.5,-0.5,-0.5,0.4],
@@ -101,6 +102,14 @@ sun_data = {'u':[88.5,-0.5,-0.5,0.4],
             'zs':[131.1,-1.4,-0.5,0.2],
             'y':[92.0,-1.3,-0.2,0.9]}
 
+sun_data_error = {'u':[6.2,0.1,0.1,0.1],
+            'g':[34.0,0.2,0.2,0.5],
+            'r':[32.7,0.2,0.2,0.5],
+            'i':[33.1,0.2,0.2,0.5],
+            'z':[62.3,0.3,0.4,0.9],
+            'zs':[45.6,0.2,0.3,0.6],
+            'y':[32.7,0.2,0.2,0.5]}
+
 # Determine sun data for this phase
 sun_data_passband = sun_data[passband]
 flux = sun_data_passband[0] + sun_data_passband[1]*angle +\
@@ -108,10 +117,18 @@ flux = sun_data_passband[0] + sun_data_passband[1]*angle +\
 flux = flux* (10**11)
 flux_mag = -2.5 * np.log10(flux)
 
+sun_data_passband_error = sun_data_error[passband]
+flux_error = np.sqrt(sun_data_passband_error[0]**2 + sun_data_passband_error[1]**2 * angle**2 +\
+       sun_data_passband_error[2]**2 * alt_target**2 + sun_data_passband_error[3]**2 * alt_moon**2)
+flux_error = flux_error * (10**11)
+flux_mag_error = 1.08574 * flux_error / flux
+
 # Determine total magnitude contribution
 total_mag = delta_mag + flux_mag
-print "Sun-> Moon conversion: %.5f"%delta_mag 
-print "Sky brightness contribution: %.5f"%flux_mag
-print "Total magnitude reduction: %.5f"%total_mag
+total_mag_error = np.sqrt(delta_mag_error**2 + flux_mag_error**2)
+
+print "Sun-> Moon conversion: %.5f +- %.5f"%(delta_mag,delta_mag_error)
+print "Sky brightness contribution: %.5f +- %.5f"%(flux_mag,flux_mag_error)
+print "Total magnitude reduction: %.5f +- %.5f"%(total_mag,total_mag_error)
 
 

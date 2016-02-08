@@ -110,13 +110,13 @@ for deltat in deltats:
 
     # Moon phase data (from Coughlin, Stubbs, and Claver Table 2) 
     moon_phases = [2,10,45,90]
-    moon_data = {'u':[2.60,3.05,4.06,5.52],
-                 'g':[2.36,2.78,3.77,5.19],
-                 'r':[2.10,2.50,3.45,4.84],
-                 'i':[1.92,2.31,3.23,4.59],
-                 'z':[2.17,2.57,3.53,4.92],
-                 'y':[1.72,2.12,2.91,4.31]}
-    
+    moon_data = {'u':[2.7,3.1,4.2,5.7],
+                 'g':[2.4,2.8,3.8,5.2],
+                 'r':[2.1,2.5,3.4,4.9],
+                 'i':[1.9,2.3,3.3,4.7],
+                 'z':[1.9,2.2,3.2,4.6],
+                 'y':[1.8,2.2,3.1,4.5]}
+
     # Determine moon data for this phase
     moon_data_passband1 = moon_data[passband1]
     delta_mag_1 = np.interp(moon.moon_phase,moon_phases,moon_data_passband1)
